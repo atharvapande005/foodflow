@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase } from '../config/supabaseClient.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
 
@@ -94,7 +95,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // PUT /api/orders/:id/status - admin updates order status (e.g. approve -> preparing -> ready)
-router.put('/:id/status', async (req, res) => {
+router.put('/:id/status', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 

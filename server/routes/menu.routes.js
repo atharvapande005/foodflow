@@ -1,6 +1,6 @@
 import express from 'express';
 import { supabase } from '../config/supabaseClient.js';
-
+import { requireAdmin } from '../middleware/adminAuth.js';
 const router = express.Router();
 
 // GET /api/menu - list all available menu items (students see this)
@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/menu - add a new menu item (admin only)
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   const { name, description, price, category, image_url } = req.body;
 
   if (!name || price === undefined) {
@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/menu/:id - edit a menu item (admin only)
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
 
@@ -50,7 +50,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/menu/:id - remove a menu item (admin only)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   const { error } = await supabase.from('menu_items').delete().eq('id', id);
