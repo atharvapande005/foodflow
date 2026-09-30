@@ -12,6 +12,19 @@ router.post('/', async (req, res) => {
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items array is required and cannot be empty' });
   }
+  // Check canteen is open
+  const { data: canteenState, error: canteenError } = await supabase
+    .from('canteen_state')
+    .select('is_open, message')
+    .eq('id', 1)
+    .single();
+
+  if (canteenError) return res.status(500).json({ error: canteenError.message });
+  if (!canteenState.is_open) {
+    return res.status(400).json({
+      error: canteenState.message || 'The canteen is currently closed and not accepting orders.',
+    });
+  }
 
   // Look up current prices/names for each item ordered (never trust prices from the client)
   const menuItemIds = items.map((i) => i.menu_item_id);
@@ -23,6 +36,12 @@ router.post('/', async (req, res) => {
   if (menuError) return res.status(500).json({ error: menuError.message });
   if (!menuItems || menuItems.length !== menuItemIds.length) {
     return res.status(400).json({ error: 'One or more menu items were not found' });
+  }
+  const unavailableItems = menuItems.filter((m) => !m.is_available);
+  if (unavailableItems.length > 0) {
+    return res.status(400).json({
+      error: `These items are currently unavailable: ${unavailableItems.map((m) => m.name).join(', ')}`,
+    });
   }
 
   const orderItems = items.map((i) => {
