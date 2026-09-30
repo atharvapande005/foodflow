@@ -1,12 +1,14 @@
 import express from 'express';
 import { supabase } from '../config/supabaseClient.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { optionalAuth } from '../middleware/optionalAuth.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = express.Router();
 
 // POST /api/orders - create a new order (before payment; status starts as 'pending')
 // body: { student_name, student_email, items: [{ menu_item_id, quantity }] }
-router.post('/', async (req, res) => {
+router.post('/', optionalAuth, async (req, res) => {
   const { student_name, student_email, items } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
@@ -72,6 +74,7 @@ router.post('/', async (req, res) => {
         total_amount,
         status: 'pending',
         payment_status: 'unpaid',
+        user_id: req.user?.id || null,
       },
     ])
     .select()
@@ -93,6 +96,17 @@ router.get('/', async (req, res) => {
   const { data, error } = await supabase
     .from('orders')
     .select('*, order_items(*)')
+    .order('created_at', { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+// GET /api/orders/my-history - a logged-in student's own past orders
+router.get('/my-history', requireAuth, async (req, res) => {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*, order_items(*)')
+    .eq('user_id', req.user.id)
     .order('created_at', { ascending: false });
 
   if (error) return res.status(500).json({ error: error.message });
