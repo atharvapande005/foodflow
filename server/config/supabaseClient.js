@@ -1,17 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { env } from './env.js';
 
-dotenv.config();
+/**
+ * service_role client. Bypasses Row Level Security, so it MUST only ever be
+ * used from this server. Every request that reaches it has already passed
+ * through our own auth/authorisation middleware.
+ */
+export const supabase = createClient(env.supabase.url, env.supabase.serviceRoleKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+/**
+ * anon client, used purely to verify user JWTs against Supabase Auth.
+ * Safe to construct even when the anon key is not configured.
+ */
+export const supabasePublic =
+  env.supabase.anonKey
+    ? createClient(env.supabase.url, env.supabase.anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+    : supabase;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error(
-    'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. Check your server/.env file.'
-  );
-}
-
-// The service role key bypasses Row Level Security and must NEVER be sent to the frontend.
-// It is safe here because this file only ever runs on the backend server.
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
+/** True when the anon key is present, i.e. user signup/login can work. */
+export const userAuthEnabled = Boolean(env.supabase.anonKey);

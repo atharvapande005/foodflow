@@ -1,7 +1,26 @@
 node_modules/
+dist/
+build/
+coverage/
+
+# Secrets — never commit real values. Note: .env.example IS tracked on purpose,
+# it must contain placeholders only. `npm run check:secrets` enforces that.
 .env
 .env.local
-client/.env
-server/.env
-dist/
+.env.*.local
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Caches / editors / OS
+.vite/
+.eslintcache
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
