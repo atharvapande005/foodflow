@@ -7,6 +7,7 @@ import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import reportsRoutes from './routes/reports.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 // ...
 
 
@@ -31,6 +32,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/admin', adminRoutes);
+
 
 // Basic error handler (catches anything thrown/rejected in routes above)
 app.use((err, req, res, next) => {
